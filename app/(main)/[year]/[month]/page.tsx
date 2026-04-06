@@ -11,10 +11,7 @@ type Props = {
 
 export default async function MonthPage({ params }: Props) {
   const { year, month } = await params;
-
   const date = createDate(year, month);
-
-  const schedules: Schedule[] = [];
 
   return <MonthView currentDate={date} />;
 }
