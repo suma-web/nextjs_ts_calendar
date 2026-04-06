@@ -57,8 +57,8 @@ const WeekView = ({ currentDate }: PropsType) => {
               ))}
 
               {daySchedules.map((s) => {
-                const start = new Date(s.startTime);
-                const end = new Date(s.endTime);
+                const start = new Date(s.startDateTime);
+                const end = new Date(s.endDateTime);
 
                 const top =
                   (start.getHours() * 60 + start.getMinutes()) * (64 / 60);

@@ -77,7 +77,7 @@ const MonthView = ({ currentDate }: PropsType) => {
                     </div>
                   ) : (
                     <div className="pl-4 pr-2 flex">
-                      {format(new Date(s.startTime), "HH:mm")}〜
+                      {format(new Date(s.startDateTime), "HH:mm")}〜
                       <p className="pl-2">{s.title}</p>
                     </div>
                   )}
@@ -104,8 +104,8 @@ const MonthView = ({ currentDate }: PropsType) => {
                         </button>
                       </div>
                       <p className="pl-5 pr-5">
-                        {format(new Date(s.startTime), "HH:mm")}〜
-                        {format(new Date(s.endTime), "HH:mm")}
+                        {format(new Date(s.startDateTime), "HH:mm")}〜
+                        {format(new Date(s.endDateTime), "HH:mm")}
                       </p>
                       {s.title}
                     </div>
