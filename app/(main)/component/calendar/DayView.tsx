@@ -44,29 +44,6 @@ const DayView = ({ currentDate }: PropsType) => {
             return (
               <div
                 key={s.id}
-                className="absolute bg-blue-300 rounded pl-10 pr-100 text-xs"
-                style={{
-                  top: `${top + 10}px`,
-                  height: `${height - 50}px`,
-                  left: "10px",
-                  right: "10px",
-                }}
-              >
-                {format(start, "HH:mm")}〜{s.title}
-              </div>
-            );
-          })}
-          {daySchedules.map((s) => {
-            const start = new Date(s.startTime);
-            const end = new Date(s.endTime);
-
-            const top = start.getHours() * 64;
-            const height =
-              ((end.getTime() - start.getTime()) / (1000 * 60 * 60)) * 64;
-
-            return (
-              <div
-                key={s.id}
                 className="absolute bg-blue-300 rounded p-2 text-xs shadow cursor-pointer"
                 style={{
                   top: `${top + 10}px`,
