@@ -34,8 +34,8 @@ const DayView = ({ currentDate }: PropsType) => {
 
         <div className="flex-3 relative">
           {daySchedules.map((s) => {
-            const start = new Date(s.startTime);
-            const end = new Date(s.endTime);
+            const start = new Date(s.startDateTime);
+            const end = new Date(s.endDateTime);
 
             const top = start.getHours() * 64;
             const height =

@@ -1,15 +1,10 @@
 "use client";
 
-import {
-  addDays,
-  addMonths,
-  addWeeks,
-  format,
-  getWeekOfMonth,
-} from "date-fns";
+import { addDays, addMonths, addWeeks, format } from "date-fns";
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useCurrentDate } from "@/lib/useCurrentDate";
+import { buildDayPath, buildMonthPath, buildWeekPath } from "@/lib/date/path";
 
 const Header = () => {
   const pathname = usePathname();
@@ -30,26 +25,13 @@ const Header = () => {
       : "month";
 
   const nowDate = format(currentDate, "yyyy年 M月");
-  const dateName = viewMode === "day" ? "日" : viewMode === "week" ? "週" : "月";
+  const dateName =
+    viewMode === "day" ? "日" : viewMode === "week" ? "週" : "月";
 
   const goToDate = (date: Date, mode: "day" | "week" | "month") => {
-    if (mode === "day") {
-      router.push(
-        `/${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, "0")}/${String(date.getDate()).padStart(2, "0")}`
-      );
-      return;
-    }
-
-    if (mode === "week") {
-      router.push(
-        `/${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, "0")}/week/${getWeekOfMonth(date, { weekStartsOn: 1 })}`
-      );
-      return;
-    }
-
-    router.push(
-      `/${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, "0")}`
-    );
+    if (mode === "day") return router.push(buildDayPath(date));
+    if (mode === "week") return router.push(buildWeekPath(date));
+    return router.push(buildMonthPath(date));
   };
 
   const handleToday = () => {
@@ -156,4 +138,4 @@ const Header = () => {
   );
 };
 
-export default Header; 
+export default Header;

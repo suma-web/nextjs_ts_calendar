@@ -1,6 +1,6 @@
 "use client";
 
-import { addHours, addMinutes, format } from "date-fns";
+import { addHours, addMinutes, format, setHours, setMinutes } from "date-fns";
 import { useState, useEffect } from "react";
 import { useSchedule } from "../ScheduleContext";
 import { useCurrentDate } from "@/lib/useCurrentDate";
@@ -12,17 +12,14 @@ const AddSchedule = () => {
 
   const [isOpen, setIsOpen] = useState(false);
   const [title, setTitle] = useState("");
+
   const [date, setDate] = useState<Date>(currentDate);
-  const [startTime, setStartTime] = useState<Date>(currentDate);
-  const [endTime, setEndTime] = useState<Date>(currentDate);
-
-  useEffect(() => {
-    const base = addMinutes(currentDate, 15);
-
-    setDate(currentDate);
-    setStartTime(base);
-    setEndTime(addHours(base, 1));
-  }, [currentDate]);
+  const [startDateTime, setStartDateTime] = useState(() =>
+    addMinutes(currentDate, 15),
+  );
+  const [endDateTime, setEndDateTime] = useState(() =>
+    addHours(addMinutes(currentDate, 15), 1),
+  );
 
   const handleAdd = () => {
     if (!title) return;
@@ -31,15 +28,15 @@ const AddSchedule = () => {
       id: uuidv4(),
       title,
       date,
-      startTime,
-      endTime,
+      startDateTime,
+      endDateTime,
     });
 
     setTitle("");
     const base = addMinutes(currentDate, 15);
     setDate(currentDate);
-    setStartTime(base);
-    setEndTime(addHours(base, 1));
+    setStartDateTime(base);
+    setEndDateTime(addHours(base, 1));
     setIsOpen(false);
   };
 
@@ -72,26 +69,31 @@ const AddSchedule = () => {
           <div className="flex gap-2">
             <input
               type="time"
-              value={format(startTime, "HH:mm")}
+              value={format(startDateTime, "HH:mm")}
               onChange={(e) => {
                 const [h, m] = e.target.value.split(":").map(Number);
-                const newDate = new Date(date);
-                newDate.setHours(h, m);
-                setStartTime(newDate);
+                const newStart = setMinutes(setHours(date, h), m);
+
+                if (newStart >= endDateTime) {
+                  alert("開始時間は終了時間より前にしてください");
+                  return;
+                }
+
+                setStartDateTime(newStart);
               }}
               className="border p-2"
             />
             <span>〜</span>
             <input
               type="time"
-              value={format(endTime, "HH:mm")}
+              value={format(endDateTime, "HH:mm")}
               onChange={(e) => {
                 const [h, m] = e.target.value.split(":").map(Number);
-                const newDate = new Date(date);
-                newDate.setHours(h, m);
+                const newEnd = setMinutes(setHours(date, h), m);
 
-                if (newDate < startTime) return;
-                setEndTime(newDate);
+                if (newEnd <= startDateTime) return;
+
+                setEndDateTime(newEnd);
               }}
               className="border p-2"
             />

@@ -1,5 +1,6 @@
 "use client";
 
+import { buildMonthPath } from "@/lib/date/path";
 import { useCurrentDate } from "@/lib/useCurrentDate";
 import {
   eachDayOfInterval,
@@ -29,18 +30,12 @@ const DateShowLeft = () => {
 
   const handlePrevMonth = () => {
     const newDate = addMonths(currentDate, -1);
-
-    router.push(
-      `/${newDate.getFullYear()}/${String(newDate.getMonth() + 1).padStart(2, "0")}`
-    );
+    router.push(buildMonthPath(newDate));
   };
 
   const handleNextMonth = () => {
     const newDate = addMonths(currentDate, 1);
-
-    router.push(
-      `/${newDate.getFullYear()}/${String(newDate.getMonth() + 1).padStart(2, "0")}`
-    );
+    router.push(buildMonthPath(newDate));
   };
 
   return (
@@ -73,8 +68,7 @@ const DateShowLeft = () => {
 
       <div className="grid grid-cols-7 gap-2">
         {days.map((day) => {
-          const isCurrentMonth =
-            day.getMonth() === currentDate.getMonth();
+          const isCurrentMonth = day.getMonth() === currentDate.getMonth();
 
           return (
             <div
@@ -88,7 +82,7 @@ const DateShowLeft = () => {
               }`}
               onClick={() => {
                 router.push(
-                  `/${day.getFullYear()}/${String(day.getMonth() + 1).padStart(2, "0")}/${String(day.getDate()).padStart(2, "0")}`
+                  `/${day.getFullYear()}/${String(day.getMonth() + 1).padStart(2, "0")}/${String(day.getDate()).padStart(2, "0")}`,
                 );
               }}
             >
@@ -101,4 +95,4 @@ const DateShowLeft = () => {
   );
 };
 
-export default DateShowLeft;  
+export default DateShowLeft;

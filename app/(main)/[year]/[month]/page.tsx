@@ -1,6 +1,5 @@
 import { createDate } from "@/lib/date";
 import MonthView from "../../component/calendar/MonthView";
-import { Schedule } from "@/types/schedule";
 
 type Props = {
   params: Promise<{
