@@ -1,6 +1,7 @@
 # カレンダーを作成する
 使用言語　Next.js、TypeScript
-DB　なし（リロードすると予定が消えます）
+
+DBなし（リロードすると予定が消えます）
 
 ### 初期セットアップ
 `npx create-next-app@latest my-app --yes`
