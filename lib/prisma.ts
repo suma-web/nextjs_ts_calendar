@@ -1,3 +1,4 @@
+import { PrismaPg } from '@prisma/adapter-pg'
 import { PrismaClient } from '@prisma/client'
 
 const globalForPrisma = global as unknown as {
@@ -5,12 +6,15 @@ const globalForPrisma = global as unknown as {
 }
 
 export function getPrisma() {
-  if (!process.env.DATABASE_URL) {
+  const connectionString = process.env.DATABASE_URL
+
+  if (!connectionString) {
     throw new Error("DATABASE_URL is not defined")
   }
 
   if (!globalForPrisma.prisma) {
-    globalForPrisma.prisma = new PrismaClient()
+    const adapter = new PrismaPg(connectionString)
+    globalForPrisma.prisma = new PrismaClient({ adapter })
   }
 
   return globalForPrisma.prisma
