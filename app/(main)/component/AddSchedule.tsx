@@ -1,10 +1,9 @@
 "use client";
 
 import { addHours, addMinutes, format, setHours, setMinutes } from "date-fns";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useSchedule } from "../ScheduleContext";
 import { useCurrentDate } from "@/lib/useCurrentDate";
-import { v4 as uuidv4 } from "uuid";
 
 const AddSchedule = () => {
   const { addSchedule } = useSchedule();
@@ -12,6 +11,7 @@ const AddSchedule = () => {
 
   const [isOpen, setIsOpen] = useState(false);
   const [title, setTitle] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   const [date, setDate] = useState<Date>(currentDate);
   const [startDateTime, setStartDateTime] = useState(() =>
@@ -21,23 +21,30 @@ const AddSchedule = () => {
     addHours(addMinutes(currentDate, 15), 1),
   );
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!title) return;
 
-    addSchedule({
-      id: uuidv4(),
-      title,
-      date,
-      startDateTime,
-      endDateTime,
-    });
+    try {
+      setIsSaving(true);
 
-    setTitle("");
-    const base = addMinutes(currentDate, 15);
-    setDate(currentDate);
-    setStartDateTime(base);
-    setEndDateTime(addHours(base, 1));
-    setIsOpen(false);
+      await addSchedule({
+        title,
+        date,
+        startDateTime,
+        endDateTime,
+      });
+
+      setTitle("");
+      const base = addMinutes(currentDate, 15);
+      setDate(currentDate);
+      setStartDateTime(base);
+      setEndDateTime(addHours(base, 1));
+      setIsOpen(false);
+    } catch {
+      alert("予定の保存に失敗しました");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -62,7 +69,14 @@ const AddSchedule = () => {
             value={format(date, "yyyy-MM-dd")}
             onChange={(e) => {
               const [y, m, d] = e.target.value.split("-").map(Number);
-              setDate(new Date(y, m - 1, d));
+              const nextDate = new Date(y, m - 1, d);
+              setDate(nextDate);
+              setStartDateTime(
+                setMinutes(setHours(nextDate, startDateTime.getHours()), startDateTime.getMinutes()),
+              );
+              setEndDateTime(
+                setMinutes(setHours(nextDate, endDateTime.getHours()), endDateTime.getMinutes()),
+              );
             }}
             className="border p-2"
           />
@@ -100,9 +114,10 @@ const AddSchedule = () => {
           </div>
           <button
             onClick={handleAdd}
+            disabled={isSaving}
             className="bg-blue-500 text-white px-3 py-2 rounded"
           >
-            追加
+            {isSaving ? "保存中..." : "追加"}
           </button>
         </div>
       )}
