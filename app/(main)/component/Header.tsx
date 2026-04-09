@@ -74,13 +74,13 @@ const Header = () => {
 
         <div className="m-3">
           <button
-            className="bg-white-300 hover:bg-gray-200 text-gray-800 font-bold py-2 px-2 rounded-l my-3"
+            className="bg-white-300 hover:bg-gray-200 text-xs text-gray-800 font-bold py-2 px-2 rounded-l my-3"
             onClick={handlePrev}
           >
             ＜
           </button>
           <button
-            className="bg-white-300 hover:bg-gray-200 text-gray-800 font-bold py-2 px-2 rounded-r my-3"
+            className="bg-white-300 hover:bg-gray-200 text-xs text-gray-800 font-bold py-2 px-2 rounded-r my-3"
             onClick={handleNext}
           >
             ＞
