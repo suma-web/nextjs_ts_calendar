@@ -30,6 +30,27 @@ Password: password
 DATABASE_URL="postgresql://postgres:password@localhost:5433/mydb"
 ```
 
+`.env.example` をコピーして、ローカルでは `.env` に値を設定してください。
+
+## Vercel デプロイ
+このリポジトリは `main` ブランチの変更が Vercel に反映されます。
+
+本番デプロイでは、ローカル Docker の接続先ではなく、Vercel プロジェクト側の環境変数を設定してください。
+
+- `DATABASE_URL`
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+- `AUTH_SECRET`
+
+`DATABASE_URL` は `localhost` や `127.0.0.1:5433` のままでは Vercel から接続できません。Vercel から到達できる PostgreSQL の接続文字列に変更する必要があります。
+
+設定場所:
+Vercel Dashboard > Project Settings > Environment Variables
+
+このリポジトリでは、ビルド時に `prisma migrate deploy` を実行して本番DBへ migration を適用します。初回デプロイ時や schema 変更後は、Vercel の `DATABASE_URL` が正しく設定されている必要があります。
+
+設定後は、`main` にマージして再デプロイすると [https://nextjs-ts-calendar-jade.vercel.app/](https://nextjs-ts-calendar-jade.vercel.app/) に反映されます。
+
 # アプリについて
 イメージは簡易版のGoogleカレンダー
 
