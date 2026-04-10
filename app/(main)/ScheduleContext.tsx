@@ -1,22 +1,90 @@
 "use client";
 
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { Schedule } from "@/types/schedule";
+
+type ScheduleInput = {
+  date: Date;
+  title: string;
+  startDateTime: Date;
+  endDateTime: Date;
+};
 
 type ContextType = {
   schedules: Schedule[];
-  addSchedule: (schedule: Schedule) => void;
+  addSchedule: (schedule: ScheduleInput) => Promise<void>;
   updateSchedule: (id: string, title: string) => void;
   deleteSchedule: (id: string) => void;
 };
 
 const ScheduleContext = createContext<ContextType | null>(null);
 
+function normalizeSchedule(schedule: {
+  id: string;
+  date: string | Date;
+  title: string;
+  startTime: string | Date;
+  endTime: string | Date;
+}): Schedule {
+  return {
+    id: schedule.id,
+    date: new Date(schedule.date),
+    title: schedule.title,
+    startDateTime: new Date(schedule.startTime),
+    endDateTime: new Date(schedule.endTime),
+  };
+}
+
 export const ScheduleProvider = ({ children }: { children: React.ReactNode }) => {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
 
-  const addSchedule = (schedule: Schedule) => {
-    setSchedules((prev) => [...prev, schedule]);
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadSchedules() {
+      const response = await fetch("/api/schedules");
+
+      if (!response.ok) {
+        return;
+      }
+
+      const data = await response.json();
+
+      if (!isMounted) {
+        return;
+      }
+
+      setSchedules(data.map(normalizeSchedule));
+    }
+
+    void loadSchedules();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const addSchedule = async (schedule: ScheduleInput) => {
+    const response = await fetch("/api/schedules", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        title: schedule.title,
+        date: schedule.date.toISOString(),
+        startTime: schedule.startDateTime.toISOString(),
+        endTime: schedule.endDateTime.toISOString(),
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("failed to save schedule");
+    }
+
+    const createdSchedule = normalizeSchedule(await response.json());
+
+    setSchedules((prev) => [...prev, createdSchedule]);
   };
 
   const updateSchedule = (id: string, title: string) => {
