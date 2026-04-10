@@ -49,6 +49,8 @@ Vercel Dashboard > Project Settings > Environment Variables
 
 このリポジトリでは、ビルド時に `prisma migrate deploy` を実行して本番DBへ migration を適用します。初回デプロイ時や schema 変更後は、Vercel の `DATABASE_URL` が正しく設定されている必要があります。
 
+Vercel で `P1001: Can't reach database server at 127.0.0.1:5433` が出る場合は、`DATABASE_URL` が未設定か、`Production` 環境に入っていない可能性が高いです。`Production` を選んで保存したあと、再デプロイしてください。
+
 設定後は、`main` にマージして再デプロイすると [https://nextjs-ts-calendar-jade.vercel.app/](https://nextjs-ts-calendar-jade.vercel.app/) に反映されます。
 
 # アプリについて
