@@ -1,6 +1,4 @@
 # カレンダーを作成する
-## 使用言語
-Next.js、TypeScript
 ### 初期セットアップ
 `npx create-next-app@latest my-app --yes`
 [http://localhost:3000](http://localhost:3000) でNext.jsの初期セットアップが確認できる
