@@ -13,8 +13,8 @@ type ScheduleInput = {
 type ContextType = {
   schedules: Schedule[];
   addSchedule: (schedule: ScheduleInput) => Promise<void>;
-  updateSchedule: (id: string, title: string) => void;
-  deleteSchedule: (id: string) => void;
+  updateSchedule: (id: string, title: string) => Promise<void>;
+  deleteSchedule: (id: string) => Promise<void>;
 };
 
 const ScheduleContext = createContext<ContextType | null>(null);
@@ -87,7 +87,19 @@ export const ScheduleProvider = ({ children }: { children: React.ReactNode }) =>
     setSchedules((prev) => [...prev, createdSchedule]);
   };
 
-  const updateSchedule = (id: string, title: string) => {
+  const updateSchedule = async (id: string, title: string) => {
+    const response = await fetch("/api/schedules", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id, title }),
+    });
+
+    if (!response.ok) {
+      throw new Error("failed to update schedule");
+    }
+
     setSchedules((prev) =>
       prev.map((s) =>
         s.id === id ? { ...s, title } : s
@@ -95,7 +107,19 @@ export const ScheduleProvider = ({ children }: { children: React.ReactNode }) =>
     );
   };
 
-  const deleteSchedule = (id: string) => {
+  const deleteSchedule = async (id: string) => {
+    const response = await fetch("/api/schedules", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id }),
+    });
+
+    if (!response.ok) {
+      throw new Error("failed to delete schedule");
+    }
+
     setSchedules((prev) =>
       prev.filter((s) => s.id !== id)
     );

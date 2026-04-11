@@ -61,10 +61,14 @@ const DayView = ({ currentDate }: PropsType) => {
                       className="border p-4 text-xl text-center bg-white"
                     />
                     <button
-                      onClick={(e) => {
+                      onClick={async (e) => {
                         e.stopPropagation();
-                        updateSchedule(s.id, editTitle);
-                        setEditingId(null);
+                        try {
+                          await updateSchedule(s.id, editTitle);
+                          setEditingId(null);
+                        } catch {
+                          alert("予定の更新に失敗しました");
+                        }
                       }}
                       className="border p-1 text-xl bg-gray-300"
                     >
@@ -93,9 +97,13 @@ const DayView = ({ currentDate }: PropsType) => {
                         🖊️
                       </button>
                       <button
-                        onClick={(e) => {
+                        onClick={async (e) => {
                           e.stopPropagation();
-                          deleteSchedule(s.id);
+                          try {
+                            await deleteSchedule(s.id);
+                          } catch {
+                            alert("予定の削除に失敗しました");
+                          }
                         }}
                       >
                         🗑️
