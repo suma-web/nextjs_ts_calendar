@@ -67,9 +67,13 @@ const MonthView = ({ currentDate }: PropsType) => {
                       />
                       <button
                         className="bg-gray-100 border-gray-200/50 rounded-3xl hover:bg-gray-300 shadow-lg"
-                        onClick={() => {
-                          updateSchedule(s.id, editTitle);
-                          setEditingId(null);
+                        onClick={async () => {
+                          try {
+                            await updateSchedule(s.id, editTitle);
+                            setEditingId(null);
+                          } catch {
+                            alert("予定の更新に失敗しました");
+                          }
                         }}
                       >
                         保存
@@ -95,9 +99,13 @@ const MonthView = ({ currentDate }: PropsType) => {
                           🖊️
                         </button>
                         <button
-                          onClick={(e) => {
+                          onClick={async (e) => {
                             e.stopPropagation();
-                            deleteSchedule(s.id);
+                            try {
+                              await deleteSchedule(s.id);
+                            } catch {
+                              alert("予定の削除に失敗しました");
+                            }
                           }}
                         >
                           🗑️

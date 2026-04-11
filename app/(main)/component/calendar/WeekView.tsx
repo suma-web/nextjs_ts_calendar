@@ -85,10 +85,14 @@ const WeekView = ({ currentDate }: PropsType) => {
                         />
                         <button
                           className="bg-gray-200 rounded pl-2 pr-2 text-xl"
-                          onClick={(e) => {
+                          onClick={async (e) => {
                             e.stopPropagation();
-                            updateSchedule(s.id, editTitle);
-                            setEditingId(null);
+                            try {
+                              await updateSchedule(s.id, editTitle);
+                              setEditingId(null);
+                            } catch {
+                              alert("予定の更新に失敗しました");
+                            }
                           }}
                         >
                           保存
@@ -116,9 +120,13 @@ const WeekView = ({ currentDate }: PropsType) => {
                             🖊️
                           </button>
                           <button
-                            onClick={(e) => {
+                            onClick={async (e) => {
                               e.stopPropagation();
-                              deleteSchedule(s.id);
+                              try {
+                                await deleteSchedule(s.id);
+                              } catch {
+                                alert("予定の削除に失敗しました");
+                              }
                             }}
                           >
                             🗑️

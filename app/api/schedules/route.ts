@@ -76,3 +76,69 @@ export async function POST(request: Request) {
     )
   }
 }
+
+export async function PATCH(request: Request) {
+  try {
+    const prisma = getPrisma()
+    const body = await request.json()
+    const id = typeof body.id === 'string' ? body.id : ''
+    const title =
+      typeof body.title === 'string' ? body.title.trim() : ''
+
+    if (!id) {
+      return Response.json(
+        { error: 'id is required' },
+        { status: 400 },
+      )
+    }
+
+    if (!title) {
+      return Response.json(
+        { error: 'title is required' },
+        { status: 400 },
+      )
+    }
+
+    const schedule = await prisma.schedule.update({
+      where: { id },
+      data: { title },
+    })
+
+    return Response.json(schedule)
+  } catch (error) {
+    console.error('Failed to update schedule', error)
+
+    return Response.json(
+      { error: 'failed to update schedule' },
+      { status: 500 },
+    )
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const prisma = getPrisma()
+    const body = await request.json()
+    const id = typeof body.id === 'string' ? body.id : ''
+
+    if (!id) {
+      return Response.json(
+        { error: 'id is required' },
+        { status: 400 },
+      )
+    }
+
+    await prisma.schedule.delete({
+      where: { id },
+    })
+
+    return new Response(null, { status: 204 })
+  } catch (error) {
+    console.error('Failed to delete schedule', error)
+
+    return Response.json(
+      { error: 'failed to delete schedule' },
+      { status: 500 },
+    )
+  }
+}
