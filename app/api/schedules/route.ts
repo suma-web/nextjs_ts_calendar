@@ -1,10 +1,36 @@
+import { auth } from '@/auth'
 import { getPrisma } from '@/lib/prisma'
+
+function isFiveMinuteIncrement(date: Date) {
+  return date.getMinutes() % 5 === 0
+    && date.getSeconds() === 0
+    && date.getMilliseconds() === 0
+}
+
+async function getAuthenticatedEmail() {
+  const session = await auth()
+  const email = session?.user?.email?.trim().toLowerCase()
+
+  return email || null
+}
 
 export async function GET() {
   try {
+    const ownerEmail = await getAuthenticatedEmail()
+
+    if (!ownerEmail) {
+      return Response.json(
+        { error: 'authentication required' },
+        { status: 401 },
+      )
+    }
+
     const prisma = getPrisma()
 
     const data = await prisma.schedule.findMany({
+      where: {
+        ownerEmail,
+      },
       orderBy: {
         startTime: 'asc',
       },
@@ -23,6 +49,15 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const ownerEmail = await getAuthenticatedEmail()
+
+    if (!ownerEmail) {
+      return Response.json(
+        { error: 'authentication required' },
+        { status: 401 },
+      )
+    }
+
     const prisma = getPrisma()
     const body = await request.json()
 
@@ -57,8 +92,19 @@ export async function POST(request: Request) {
       )
     }
 
+    if (
+      !isFiveMinuteIncrement(startTime)
+      || !isFiveMinuteIncrement(endTime)
+    ) {
+      return Response.json(
+        { error: 'startTime and endTime must be in five-minute increments' },
+        { status: 400 },
+      )
+    }
+
     const schedule = await prisma.schedule.create({
       data: {
+        ownerEmail,
         title,
         date,
         startTime,
@@ -79,6 +125,15 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
+    const ownerEmail = await getAuthenticatedEmail()
+
+    if (!ownerEmail) {
+      return Response.json(
+        { error: 'authentication required' },
+        { status: 401 },
+      )
+    }
+
     const prisma = getPrisma()
     const body = await request.json()
     const id = typeof body.id === 'string' ? body.id : ''
@@ -99,8 +154,24 @@ export async function PATCH(request: Request) {
       )
     }
 
+    const existingSchedule = await prisma.schedule.findFirst({
+      where: {
+        id,
+        ownerEmail,
+      },
+    })
+
+    if (!existingSchedule) {
+      return Response.json(
+        { error: 'schedule not found' },
+        { status: 404 },
+      )
+    }
+
     const schedule = await prisma.schedule.update({
-      where: { id },
+      where: {
+        id: existingSchedule.id,
+      },
       data: { title },
     })
 
@@ -117,6 +188,15 @@ export async function PATCH(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    const ownerEmail = await getAuthenticatedEmail()
+
+    if (!ownerEmail) {
+      return Response.json(
+        { error: 'authentication required' },
+        { status: 401 },
+      )
+    }
+
     const prisma = getPrisma()
     const body = await request.json()
     const id = typeof body.id === 'string' ? body.id : ''
@@ -128,9 +208,19 @@ export async function DELETE(request: Request) {
       )
     }
 
-    await prisma.schedule.delete({
-      where: { id },
+    const result = await prisma.schedule.deleteMany({
+      where: {
+        id,
+        ownerEmail,
+      },
     })
+
+    if (result.count === 0) {
+      return Response.json(
+        { error: 'schedule not found' },
+        { status: 404 },
+      )
+    }
 
     return new Response(null, { status: 204 })
   } catch (error) {

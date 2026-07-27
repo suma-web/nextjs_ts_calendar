@@ -7,10 +7,13 @@ datasource db {
 }
 
 model Schedule {
-  id        String   @id @default(uuid())
-  date      DateTime
-  title     String
-  startTime DateTime
-  endTime   DateTime
-  createdAt DateTime @default(now())
+  id         String   @id @default(uuid())
+  ownerEmail String?
+  date       DateTime
+  title      String
+  startTime  DateTime
+  endTime    DateTime
+  createdAt  DateTime @default(now())
+
+  @@index([ownerEmail, startTime])
 }

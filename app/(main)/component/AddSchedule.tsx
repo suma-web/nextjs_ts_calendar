@@ -5,6 +5,25 @@ import { useState } from "react";
 import { useSchedule } from "../ScheduleContext";
 import { useCurrentDate } from "@/lib/useCurrentDate";
 
+const roundUpToFiveMinutes = (value: Date) => {
+  const rounded = new Date(value);
+  rounded.setSeconds(0, 0);
+
+  const remainder = rounded.getMinutes() % 5;
+  if (remainder !== 0) {
+    rounded.setMinutes(rounded.getMinutes() + 5 - remainder);
+  }
+
+  return rounded;
+};
+
+const timeOptions = Array.from({ length: 24 * 12 }, (_, index) => {
+  const hours = Math.floor(index / 12);
+  const minutes = (index % 12) * 5;
+
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+});
+
 const AddSchedule = () => {
   const { addSchedule } = useSchedule();
   const currentDate = useCurrentDate();
@@ -15,10 +34,10 @@ const AddSchedule = () => {
 
   const [date, setDate] = useState<Date>(currentDate);
   const [startDateTime, setStartDateTime] = useState(() =>
-    addMinutes(currentDate, 15),
+    roundUpToFiveMinutes(addMinutes(currentDate, 15)),
   );
   const [endDateTime, setEndDateTime] = useState(() =>
-    addHours(addMinutes(currentDate, 15), 1),
+    addHours(roundUpToFiveMinutes(addMinutes(currentDate, 15)), 1),
   );
 
   const handleAdd = async () => {
@@ -35,7 +54,7 @@ const AddSchedule = () => {
       });
 
       setTitle("");
-      const base = addMinutes(currentDate, 15);
+      const base = roundUpToFiveMinutes(addMinutes(currentDate, 15));
       setDate(currentDate);
       setStartDateTime(base);
       setEndDateTime(addHours(base, 1));
@@ -81,8 +100,8 @@ const AddSchedule = () => {
             className="border p-2"
           />
           <div className="flex gap-2">
-            <input
-              type="time"
+            <select
+              aria-label="開始時刻"
               value={format(startDateTime, "HH:mm")}
               onChange={(e) => {
                 const [h, m] = e.target.value.split(":").map(Number);
@@ -96,10 +115,16 @@ const AddSchedule = () => {
                 setStartDateTime(newStart);
               }}
               className="border p-2"
-            />
+            >
+              {timeOptions.map((time) => (
+                <option key={`start-${time}`} value={time}>
+                  {time}
+                </option>
+              ))}
+            </select>
             <span>〜</span>
-            <input
-              type="time"
+            <select
+              aria-label="終了時刻"
               value={format(endDateTime, "HH:mm")}
               onChange={(e) => {
                 const [h, m] = e.target.value.split(":").map(Number);
@@ -110,7 +135,13 @@ const AddSchedule = () => {
                 setEndDateTime(newEnd);
               }}
               className="border p-2"
-            />
+            >
+              {timeOptions.map((time) => (
+                <option key={`end-${time}`} value={time}>
+                  {time}
+                </option>
+              ))}
+            </select>
           </div>
           <button
             onClick={handleAdd}
