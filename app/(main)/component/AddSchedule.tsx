@@ -42,15 +42,15 @@ const AddSchedule = () => {
 
     try {
       await addSchedule(pendingSchedule);
+      setIsSaving(false);
     } catch {
       setTitle(pendingSchedule.title);
       setDate(pendingSchedule.date);
       setStartDateTime(pendingSchedule.startDateTime);
       setEndDateTime(pendingSchedule.endDateTime);
       setIsOpen(true);
-      alert("予定の保存に失敗しました");
-    } finally {
       setIsSaving(false);
+      alert("予定の保存に失敗しました");
     }
   };
 
