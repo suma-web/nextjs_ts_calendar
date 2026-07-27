@@ -41,17 +41,23 @@ const AddSchedule = () => {
   );
 
   const handleAdd = async () => {
-    if (!title) return;
+    const trimmedTitle = title.trim();
+    if (!trimmedTitle || isSaving) return;
 
-    try {
-      setIsSaving(true);
+    const pendingSchedule = {
+      title: trimmedTitle,
+      date,
+      startDateTime,
+      endDateTime,
+    };
 
-      await addSchedule({
-        title,
-        date,
-        startDateTime,
-        endDateTime,
-      });
+    setIsSaving(true);
+    setTitle("");
+    const base = addMinutes(currentDate, 15);
+    setDate(currentDate);
+    setStartDateTime(base);
+    setEndDateTime(addHours(base, 1));
+    setIsOpen(false);
 
       setTitle("");
       const base = roundUpToFiveMinutes(addMinutes(currentDate, 15));
@@ -60,6 +66,11 @@ const AddSchedule = () => {
       setEndDateTime(addHours(base, 1));
       setIsOpen(false);
     } catch {
+      setTitle(pendingSchedule.title);
+      setDate(pendingSchedule.date);
+      setStartDateTime(pendingSchedule.startDateTime);
+      setEndDateTime(pendingSchedule.endDateTime);
+      setIsOpen(true);
       alert("予定の保存に失敗しました");
     } finally {
       setIsSaving(false);
@@ -70,9 +81,10 @@ const AddSchedule = () => {
     <>
       <button
         className="flex justify-center items-center text-xl mt-5 mb-5 mr-20 ml-20 p-4 bg-white-700 border border-gray-300/50 rounded-2xl shadow-lg hover:bg-gray-200"
+        disabled={isSaving}
         onClick={() => setIsOpen(!isOpen)}
       >
-        <p>＋ 作成</p>
+        <p>{isSaving ? "保存中..." : "＋ 作成"}</p>
       </button>
 
       {isOpen && (
