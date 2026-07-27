@@ -1,6 +1,13 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { Schedule } from "@/types/schedule";
 
 type ScheduleInput = {
@@ -64,71 +71,138 @@ export const ScheduleProvider = ({ children }: { children: React.ReactNode }) =>
     };
   }, []);
 
-  const addSchedule = async (schedule: ScheduleInput) => {
-    const response = await fetch("/api/schedules", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        title: schedule.title,
-        date: schedule.date.toISOString(),
-        startTime: schedule.startDateTime.toISOString(),
-        endTime: schedule.endDateTime.toISOString(),
-      }),
-    });
+  const addSchedule = useCallback(async (schedule: ScheduleInput) => {
+    const optimisticId = `optimistic-${crypto.randomUUID()}`;
+    const optimisticSchedule: Schedule = {
+      id: optimisticId,
+      date: schedule.date,
+      title: schedule.title.trim(),
+      startDateTime: schedule.startDateTime,
+      endDateTime: schedule.endDateTime,
+    };
 
-    if (!response.ok) {
-      throw new Error("failed to save schedule");
+    setSchedules((prev) => [...prev, optimisticSchedule]);
+
+    try {
+      const response = await fetch("/api/schedules", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: optimisticSchedule.title,
+          date: optimisticSchedule.date.toISOString(),
+          startTime: optimisticSchedule.startDateTime.toISOString(),
+          endTime: optimisticSchedule.endDateTime.toISOString(),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("failed to save schedule");
+      }
+
+      const createdSchedule = normalizeSchedule(await response.json());
+
+      setSchedules((prev) =>
+        prev.map((item) =>
+          item.id === optimisticId ? createdSchedule : item
+        )
+      );
+    } catch (error) {
+      setSchedules((prev) =>
+        prev.filter((item) => item.id !== optimisticId)
+      );
+      throw error;
     }
+  }, []);
 
-    const createdSchedule = normalizeSchedule(await response.json());
-
-    setSchedules((prev) => [...prev, createdSchedule]);
-  };
-
-  const updateSchedule = async (id: string, title: string) => {
-    const response = await fetch("/api/schedules", {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ id, title }),
-    });
-
-    if (!response.ok) {
-      throw new Error("failed to update schedule");
-    }
+  const updateSchedule = useCallback(async (id: string, title: string) => {
+    let previousTitle: string | undefined;
+    const nextTitle = title.trim();
 
     setSchedules((prev) =>
-      prev.map((s) =>
-        s.id === id ? { ...s, title } : s
-      )
-    );
-  };
+      prev.map((schedule) => {
+        if (schedule.id !== id) {
+          return schedule;
+        }
 
-  const deleteSchedule = async (id: string) => {
-    const response = await fetch("/api/schedules", {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ id }),
+        previousTitle = schedule.title;
+        return { ...schedule, title: nextTitle };
+      })
+    );
+
+    try {
+      const response = await fetch("/api/schedules", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id, title: nextTitle }),
+      });
+
+      if (!response.ok) {
+        throw new Error("failed to update schedule");
+      }
+    } catch (error) {
+      if (previousTitle !== undefined) {
+        setSchedules((prev) =>
+          prev.map((schedule) =>
+            schedule.id === id
+              ? { ...schedule, title: previousTitle as string }
+              : schedule
+          )
+        );
+      }
+      throw error;
+    }
+  }, []);
+
+  const deleteSchedule = useCallback(async (id: string) => {
+    let removedSchedule: Schedule | undefined;
+    let removedIndex = -1;
+
+    setSchedules((prev) => {
+      removedIndex = prev.findIndex((schedule) => schedule.id === id);
+      removedSchedule = prev[removedIndex];
+
+      return prev.filter((schedule) => schedule.id !== id);
     });
 
-    if (!response.ok) {
-      throw new Error("failed to delete schedule");
-    }
+    try {
+      const response = await fetch("/api/schedules", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id }),
+      });
 
-    setSchedules((prev) =>
-      prev.filter((s) => s.id !== id)
-    );
-  };
+      if (!response.ok) {
+        throw new Error("failed to delete schedule");
+      }
+    } catch (error) {
+      if (removedSchedule) {
+        setSchedules((prev) => {
+          const restored = [...prev];
+          restored.splice(
+            Math.min(Math.max(removedIndex, 0), restored.length),
+            0,
+            removedSchedule as Schedule,
+          );
+          return restored;
+        });
+      }
+      throw error;
+    }
+  }, []);
+
+  const value = useMemo(
+    () => ({ schedules, addSchedule, updateSchedule, deleteSchedule }),
+    [schedules, addSchedule, updateSchedule, deleteSchedule],
+  );
 
   return (
-    <ScheduleContext.Provider
-      value={{ schedules, addSchedule, updateSchedule, deleteSchedule }}
-    >
+    <ScheduleContext.Provider value={value}>
       {children}
     </ScheduleContext.Provider>
   );
