@@ -1,6 +1,12 @@
 import { auth } from '@/auth'
 import { getPrisma } from '@/lib/prisma'
 
+function isFiveMinuteIncrement(date: Date) {
+  return date.getMinutes() % 5 === 0
+    && date.getSeconds() === 0
+    && date.getMilliseconds() === 0
+}
+
 async function getAuthenticatedEmail() {
   const session = await auth()
   const email = session?.user?.email?.trim().toLowerCase()
@@ -8,19 +14,15 @@ async function getAuthenticatedEmail() {
   return email || null
 }
 
-function unauthorized() {
-  return Response.json(
-    { error: 'authentication required' },
-    { status: 401 },
-  )
-}
-
 export async function GET() {
   try {
     const ownerEmail = await getAuthenticatedEmail()
 
     if (!ownerEmail) {
-      return unauthorized()
+      return Response.json(
+        { error: 'authentication required' },
+        { status: 401 },
+      )
     }
 
     const prisma = getPrisma()
@@ -50,7 +52,10 @@ export async function POST(request: Request) {
     const ownerEmail = await getAuthenticatedEmail()
 
     if (!ownerEmail) {
-      return unauthorized()
+      return Response.json(
+        { error: 'authentication required' },
+        { status: 401 },
+      )
     }
 
     const prisma = getPrisma()
@@ -87,6 +92,16 @@ export async function POST(request: Request) {
       )
     }
 
+    if (
+      !isFiveMinuteIncrement(startTime)
+      || !isFiveMinuteIncrement(endTime)
+    ) {
+      return Response.json(
+        { error: 'startTime and endTime must be in five-minute increments' },
+        { status: 400 },
+      )
+    }
+
     const schedule = await prisma.schedule.create({
       data: {
         ownerEmail,
@@ -113,7 +128,10 @@ export async function PATCH(request: Request) {
     const ownerEmail = await getAuthenticatedEmail()
 
     if (!ownerEmail) {
-      return unauthorized()
+      return Response.json(
+        { error: 'authentication required' },
+        { status: 401 },
+      )
     }
 
     const prisma = getPrisma()
@@ -173,7 +191,10 @@ export async function DELETE(request: Request) {
     const ownerEmail = await getAuthenticatedEmail()
 
     if (!ownerEmail) {
-      return unauthorized()
+      return Response.json(
+        { error: 'authentication required' },
+        { status: 401 },
+      )
     }
 
     const prisma = getPrisma()
